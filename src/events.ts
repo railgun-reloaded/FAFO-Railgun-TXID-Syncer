@@ -17,17 +17,20 @@ async function fetchEvents (provider: Provider, contract: BaseContract, fromBloc
   )
 
   // Query provider for all logs in block range
-  // Filter by topics since target is a proxy, and we don't want proxy events in our logs
+  // Don't pass filters here since some RPCs will error with 'too many topics'
   const logs = await provider.getLogs({
     fromBlock,
     toBlock,
     address: contract.getAddress(),
-    topics
   })
 
-  // Parse all logs
-  const events = logs.map((log) => contract.interface.parseLog(log))
+  // Filter logs ourselves to remove any we aren't interested in
+  const logsFiltered = logs.filter((log) => topics.includes(log.topics[0] || ''))
 
+  // Parse all logs
+  const events = logsFiltered.map((log) => contract.interface.parseLog(log))
+
+  // Return parsed events
   return events
 }
 
