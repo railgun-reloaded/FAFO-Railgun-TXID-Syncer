@@ -18,4 +18,11 @@ test('Should get events in block range', async (assert) => {
 
   // Fetch events
   const events = await fetchEvents(provider, contract, fromBlock, toBlock)
+
+  // Make sure
+  assert.is(
+    events.length,
+    711, // Precalculated known count
+    'All events should be returned'
+  )
 })
