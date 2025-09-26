@@ -1,4 +1,5 @@
-import type { BaseContract, EventFragment, Provider, } from 'ethers'
+import type { BaseContract, EventFragment, Provider } from 'ethers'
+import { EventLog } from 'ethers'
 
 /**
  * Fetches all events for a contract between blocks
@@ -24,11 +25,18 @@ async function fetchEvents (provider: Provider, contract: BaseContract, fromBloc
     address: contract.getAddress(),
   })
 
-  // Filter logs ourselves to remove any we aren't interested in
+  // Filter logs ourselves to remove any we aren't interested in / have an empty topic string
   const logsFiltered = logs.filter((log) => topics.includes(log.topics[0] || ''))
 
   // Parse all logs
-  const events = logsFiltered.map((log) => contract.interface.parseLog(log))
+  const events: EventLog[] = logsFiltered.map(
+    (log) => new EventLog(
+      log,
+      contract.interface,
+      // Already filtered so the topic string will be set to a known event hash):
+      contract.interface.getEvent(log.topics[0] as string) as EventFragment
+    )
+  )
 
   // Return parsed events
   return events
