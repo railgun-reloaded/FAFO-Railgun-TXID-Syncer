@@ -1,24 +1,21 @@
 import 'dotenv/config'
+import { test } from 'brittle'
 import { Contract, JsonRpcProvider } from 'ethers'
 
 import ABILive from '../src/abi_live.json'
 import { fetchEvents } from '../src/events'
 
-/**
- * Run FAFO test
- */
-async function fafo () {
-  // Ensure env variables are set
-  if (!process.env['PROVIDER']) throw new Error('PROVIDER not set')
-  if (!process.env['PROXY_ADDRESS']) throw new Error('PROXY_ADDRESS not set')
+import { ETHEREUM_PROVIDER, ETHEREUM_RAILGUN_DEPLOYMENT_PROXY } from './constants'
 
+// Test using a known block range
+const fromBlock = 23430000
+const toBlock = 23440000
+
+test('Should get events in block range', async (assert) => {
   // Create provider and contract interfaces
-  const provider = new JsonRpcProvider(process.env['PROVIDER'])
-  const contract = new Contract(process.env['PROXY_ADDRESS'], ABILive, provider)
+  const provider = new JsonRpcProvider(ETHEREUM_PROVIDER)
+  const contract = new Contract(ETHEREUM_RAILGUN_DEPLOYMENT_PROXY, ABILive, provider)
 
   // Fetch events
-  const events = await fetchEvents(provider, contract, 23430000, 23440000)
-  console.log(events)
-}
-
-fafo()
+  const events = await fetchEvents(provider, contract, fromBlock, toBlock)
+})
