@@ -1,0 +1,7 @@
+# Node
+node_modules
+
+# Build files
+tsconfig.tsbuildinfo
+src/**/*.js
+test/**/*.js

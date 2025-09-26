@@ -1,0 +1,16 @@
+{
+  "name": "fafo-railgun-txid-syncer",
+  "version": "0.0.1",
+  "description": "Sync Railgun TXIDs directly from RPCs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "RAILGUN Project Contributors",
+  "devDependencies": {
+    "@railgun-reloaded/eslint-config": "^1.1.0",
+    "@railgun-reloaded/tsconfig": "^1.2.0",
+    "eslint": "^9.36.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}
