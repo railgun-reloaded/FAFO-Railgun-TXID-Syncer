@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Sync Railgun TXIDs directly from RPCs",
   "scripts": {
-    "test": "npx tsx --test ./test/*.test.ts"
+    "test": "npx tsx --test ./test/*.test.ts ./test/**/*.test.ts"
   },
   "author": "RAILGUN Project Contributors",
   "devDependencies": {

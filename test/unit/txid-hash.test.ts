@@ -1,6 +1,6 @@
 import { test } from 'brittle'
 
-import { txidHash } from '../src/txid-hash'
+import { txidHash } from '../../src/txid-hash'
 
 test('Should hash TXIDs', (assert) => {
   const vectors = [

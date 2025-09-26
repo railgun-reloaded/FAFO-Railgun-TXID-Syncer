@@ -1,8 +1,8 @@
-import 'dotenv'
+import 'dotenv/config'
 import { Contract, JsonRpcProvider } from 'ethers'
 
-import ABILive from './abi_live.json'
-import { fetchEvents } from './events'
+import ABILive from '../src/abi_live.json'
+import { fetchEvents } from '../src/events'
 
 /**
  * Run FAFO test
