@@ -3,12 +3,11 @@ import { test } from 'brittle'
 import { Contract, JsonRpcProvider } from 'ethers'
 
 import ABILive from '../src/abi_live.json'
-import { groupEvents } from '../src/assembler'
+import { groupEvents, interpretEventSeries } from '../src/assembler'
 import { fetchEvents } from '../src/events'
 
 import { ETHEREUM_PROVIDER, ETHEREUM_RAILGUN_DEPLOYMENT_PROXY } from './constants'
-// Exported data from subsquid blocks blocks 23430000 to 23440000
-import subsquidEthExport from './exports/ethereum.json'
+import { subsquidExport } from './exports/index'
 
 // Test using a known block range
 const fromBlock = 23430000
@@ -44,7 +43,12 @@ test('Should fetch group and parse logs', async (assert) => {
   // Make sure the right number of blocks have events
   assert.is(
     Object.keys(groupedEvents).length,
-    Object.keys(subsquidEthExport).length, // 206
+    Object.keys(subsquidExport).length, // 206
     'Should match the block count in subsquid export'
   )
+
+  // Interpret events
+  const interpretedEvents = interpretEventSeries(groupedEvents)
+
+  console.log(interpretedEvents)
 })
