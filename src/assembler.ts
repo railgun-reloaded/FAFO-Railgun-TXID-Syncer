@@ -39,13 +39,13 @@ function groupEvents (logs: EventLog[]) {
 
     // Create sorted evm transaction index entry if not exist
     if (
-      !sorted[log.blockNumber]![log.transactionIndex]
-    ) sorted[log.blockNumber]![log.transactionIndex] = []
+      !sorted[log.blockNumber]![log.transactionHash]
+    ) sorted[log.blockNumber]![log.transactionHash] = []
 
     // Push log to bucket
     if (
-      !sorted[log.blockNumber]![log.transactionIndex]![log.index]
-    ) sorted[log.blockNumber]![log.transactionIndex]!.push(log)
+      !sorted[log.blockNumber]![log.transactionHash]![log.index]
+    ) sorted[log.blockNumber]![log.transactionHash]!.push(log)
   })
 
   // Loop through every bucket

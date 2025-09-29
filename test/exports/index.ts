@@ -1,9 +1,20 @@
+import type { Provider } from 'ethers'
+import { EventLog, Interface, Log } from 'ethers'
+
+import abiDev from '../../src/abi_dev.json'
 import type { InterpretedEvents } from '../../src/assembler'
 import { bigintToHexString } from '../../src/converter'
 import { txidHash } from '../../src/txid-hash'
 
-// Exported data from subsquid blocks blocks 23430000 to 23440000
-import subsquidExportUntyped from './ethereum.json'
+import chainDataUntyped from './chainData.json' // Exported chain data to avoid needing to request from RPC every run
+import subsquidExportUntyped from './ethereum.json' // Exported data from subsquid blocks blocks 23430000 to 23440000
+
+type ChainData = {
+  blocks: Record<string, string> // Blockumber to block hash
+  transactions: Record<string, number> // Transaction hash to transaction index
+}
+
+const chainData: ChainData = chainDataUntyped
 
 // Type aliases for readabiltiy
 type EVMBlockNumber = string
@@ -52,40 +63,102 @@ function numberStringToHexString (input: string, length: number) {
   return bigintToHexString(BigInt(input), length)
 }
 
-// Type JSON
-const subsquidExportTyped: SubsquidExport = subsquidExportUntyped
+/**
+ * Get exported subsquid data and synthetic events
+ * @param provider - ethers provider
+ * @param contractAddress - contract address
+ * @returns exported data
+ */
+async function getExport (provider: Provider, contractAddress: string) {
+  // Create new interface object for encoding synthetic events
+  const contractInterface = new Interface(abiDev)
 
-// Create formatted object
-const subsquidExport: InterpretedEvents = {}
+  // Type JSON
+  const subsquidExportTyped: SubsquidExport = subsquidExportUntyped
 
-// Loop through each block
-Object.keys(subsquidExportTyped).forEach((block) => {
+  // Create formatted object
+  const subsquidExport: InterpretedEvents = {}
+
+  // Create synthetic transaction events from subsquid data
+  const syntheticEvents: EventLog[] = []
+
+  // Loop through each block
+  for (const blockNumber of Object.keys(subsquidExportTyped)) {
   // Create empty block entry
-  subsquidExport[block] = {}
+    subsquidExport[blockNumber] = {}
 
-  // Loop through evm transactions
-  Object.keys(subsquidExportTyped[block]!.evmTransactions).forEach((evmTransaction) => {
-    // Create empty evm transaction entry
-    subsquidExport[block]![evmTransaction] = {}
+    // Loop through evm transactions
+    for (const evmTransactionHash of Object.keys(subsquidExportTyped[blockNumber]!.evmTransactions)) {
+      // Create empty evm transaction entry
+      subsquidExport[blockNumber]![evmTransactionHash] = {}
 
-    // Loop through each Railgun transaction
-    subsquidExportTyped[block]!.evmTransactions[evmTransaction]!.railgunTXIDs.forEach((railgunTransaction) => {
-      const railgunTXID = txidHash(
-        railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
-        railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
-        numberStringToHexString(railgunTransaction.boundParamsHash, 32)
+      // Create transaction grouping array
+      const transactionGroup = []
+
+      // Loop through each Railgun transaction
+      for (
+        const railgunTransaction of subsquidExportTyped[blockNumber]!.evmTransactions[evmTransactionHash]!.railgunTXIDs
+      ) {
+        const railgunTXID = txidHash(
+          railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
+          railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
+          numberStringToHexString(railgunTransaction.boundParamsHash, 32)
+        )
+
+        // Set railgun transaction record on interpreted events
+        subsquidExport[blockNumber]![evmTransactionHash]![railgunTXID] = {
+          nullifiers: railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
+          commitments: railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
+          boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
+        }
+
+        transactionGroup.push({
+          nullifiersCount: railgunTransaction.nullifiers.length,
+          commitmentsCount: railgunTransaction.commitments.length,
+          boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
+        })
+      }
+
+      // Encode event data
+      const encodedEvent = contractInterface.encodeEventLog(
+        'TransactionGroup',
+        [transactionGroup]
       )
 
-      // Set railgun transaction record on interpreted events
-      subsquidExport[block]![evmTransaction]![railgunTXID] = {
-        nullifiers: railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
-        commitments: railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
-        boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
-      }
-    })
-  })
-})
+      // Construct synthetic log data
+      const log = new Log(
+        {
+          transactionHash: evmTransactionHash,
+          blockHash: chainData.blocks[blockNumber]!,
+          blockNumber: Number(subsquidExportTyped[blockNumber]!.blockNumber),
+          removed: false,
+          address: contractAddress,
+          data: encodedEvent.data,
+          topics: encodedEvent.topics,
+          index: 9999,
+          transactionIndex: chainData.transactions[evmTransactionHash]!
+        },
+        provider
+      )
+
+      // Construct synthetic EventLog object
+      const event = new EventLog(
+        log,
+        contractInterface,
+        contractInterface.getEvent('TransactionGroup')!
+      )
+
+      // Push to synthetic events
+      syntheticEvents.push(event)
+    }
+  }
+
+  return {
+    subsquidExport,
+    syntheticEvents
+  }
+}
 
 export {
-  subsquidExport
+  getExport
 }

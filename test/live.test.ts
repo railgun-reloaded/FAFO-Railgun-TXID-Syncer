@@ -7,7 +7,7 @@ import { groupEvents, interpretEventSeries } from '../src/assembler'
 import { fetchEvents } from '../src/events'
 
 import { ETHEREUM_PROVIDER, ETHEREUM_RAILGUN_DEPLOYMENT_PROXY } from './constants'
-import { subsquidExport } from './exports/index'
+import { getExport } from './exports/index'
 
 // Test using a known block range
 const fromBlock = 23430000
@@ -33,6 +33,9 @@ test('Should fetch group and parse logs', async (assert) => {
   // Create provider and contract interfaces
   const provider = new JsonRpcProvider(ETHEREUM_PROVIDER)
   const contract = new Contract(ETHEREUM_RAILGUN_DEPLOYMENT_PROXY, ABILive, provider)
+
+  // Get subsquid export
+  const { subsquidExport } = await getExport(provider, await contract.getAddress())
 
   // Fetch events
   const events = await fetchEvents(provider, contract, fromBlock, toBlock)

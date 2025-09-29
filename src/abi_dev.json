@@ -246,6 +246,36 @@
     "anonymous": false,
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "nullifiersCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "commitmentsCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "boundParamsHash",
+            "type": "bytes32"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Test.TransactionGroupStruct[]",
+        "name": "transactionGoups",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "TransactionGroup",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "treasury",
