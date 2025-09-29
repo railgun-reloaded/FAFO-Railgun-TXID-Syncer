@@ -10,10 +10,19 @@ import { EventLog } from 'ethers'
  * @returns event logs
  */
 async function fetchEvents (provider: Provider, contract: BaseContract, fromBlock: number, toBlock: number) {
-  // Filter interface fragments for events only, and fetch topic hash
+  // List of event names we're interested in
+  const eventNames = [
+    'Nullified',
+    'Transact',
+    'Unshield'
+  ]
+
+  // Filter interface fragments for events we're interested in only
   const topics = (contract.interface.fragments.filter(
     (fragment) => fragment.type === 'event'
-  ) as EventFragment[]).map(
+  ) as EventFragment[]).filter(
+    (eventFragment) => eventNames.includes(eventFragment.name)
+  ).map(
     (fragment) => fragment.topicHash
   )
 
