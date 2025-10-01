@@ -91,7 +91,7 @@ async function getExport (provider: Provider, contractAddress: string) {
     // Loop through evm transactions
     for (const evmTransactionHash of Object.keys(subsquidExportTyped[blockNumber]!.evmTransactions)) {
       // Create empty evm transaction entry, with single action 0 (assume we don't have any multi-action evm transactions in the block range)
-      subsquidExport[blockNumber]![evmTransactionHash] = {}
+      subsquidExport[blockNumber]![evmTransactionHash] = []
       subsquidExport[blockNumber][evmTransactionHash][0] = {}
 
       // Create action array

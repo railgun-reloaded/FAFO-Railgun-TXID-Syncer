@@ -14,7 +14,8 @@ async function fetchEvents (provider: Provider, contract: BaseContract, fromBloc
   const eventNames = [
     'Nullified',
     'Transact',
-    'Unshield'
+    'Unshield',
+    'Action'
   ]
 
   // Filter interface fragments for events we're interested in only

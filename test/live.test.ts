@@ -56,5 +56,8 @@ test('Should fetch group and parse logs into txids', async (assert) => {
   // Interpret events
   const interpretedEvents = interpretEventSeries(groupedEvents)
 
-  console.log(interpretedEvents)
+  console.log(JSON.stringify(subsquidExport[23430045], undefined, 2))
+  console.log(JSON.stringify(interpretedEvents[23430045], undefined, 2))
+
+  // assert.alike(interpretedEvents, subsquidExport, 'Should parse actions and RailgunTXIDs identically to subsquid export')
 })
