@@ -30,6 +30,7 @@ type SubsquidExport = Record<
       {
         id: string
         transactionHash: string
+        actionSyntheticIndex: number
         railgunTXIDs: {
           nullifiers: string[]
           commitments: string[]
@@ -89,11 +90,12 @@ async function getExport (provider: Provider, contractAddress: string) {
 
     // Loop through evm transactions
     for (const evmTransactionHash of Object.keys(subsquidExportTyped[blockNumber]!.evmTransactions)) {
-      // Create empty evm transaction entry
+      // Create empty evm transaction entry, with single action 0 (assume we don't have any multi-action evm transactions in the block range)
       subsquidExport[blockNumber]![evmTransactionHash] = {}
+      subsquidExport[blockNumber][evmTransactionHash][0] = {}
 
-      // Create transaction grouping array
-      const transactionGroup = []
+      // Create action array
+      const action = []
 
       // Loop through each Railgun transaction
       for (
@@ -106,13 +108,13 @@ async function getExport (provider: Provider, contractAddress: string) {
         )
 
         // Set railgun transaction record on interpreted events
-        subsquidExport[blockNumber]![evmTransactionHash]![railgunTXID] = {
+        subsquidExport[blockNumber]![evmTransactionHash]![0][railgunTXID] = {
           nullifiers: railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
           commitments: railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
           boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
         }
 
-        transactionGroup.push({
+        action.push({
           nullifiersCount: railgunTransaction.nullifiers.length,
           commitmentsCount: railgunTransaction.commitments.length,
           boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
@@ -121,8 +123,8 @@ async function getExport (provider: Provider, contractAddress: string) {
 
       // Encode event data
       const encodedEvent = contractInterface.encodeEventLog(
-        'TransactionGroup',
-        [transactionGroup]
+        'Action',
+        [action]
       )
 
       // Construct synthetic log data
@@ -135,7 +137,7 @@ async function getExport (provider: Provider, contractAddress: string) {
           address: contractAddress,
           data: encodedEvent.data,
           topics: encodedEvent.topics,
-          index: 9999,
+          index: subsquidExportTyped[blockNumber]!.evmTransactions[evmTransactionHash]!.actionSyntheticIndex,
           transactionIndex: chainData.transactions[evmTransactionHash]!
         },
         provider
@@ -145,7 +147,7 @@ async function getExport (provider: Provider, contractAddress: string) {
       const event = new EventLog(
         log,
         contractInterface,
-        contractInterface.getEvent('TransactionGroup')!
+        contractInterface.getEvent('Action')!
       )
 
       // Push to synthetic events

@@ -3,17 +3,20 @@ import type { EventLog } from 'ethers'
 // Type aliases for readabiltiy
 type EVMBlockNumber = string
 type EVMTransactionHash = string
+type Action = number
 type RailgunTXID = string
 
 type SortedLogs = Record<
   EVMBlockNumber,
   Record<EVMTransactionHash, EventLog[]>>
 
-type InterpretedEVMTransaction = Record<RailgunTXID, {
-  nullifiers: string[],
-  commitments: string[],
-  boundParamsHash: string,
-}>
+type InterpretedEVMTransaction = Record<Action,
+  Record<RailgunTXID, {
+    nullifiers: string[],
+    commitments: string[],
+    boundParamsHash: string,
+  }>
+>
 
 type InterpretedEvents = Record<
   EVMBlockNumber,
@@ -67,8 +70,6 @@ function groupEvents (logs: EventLog[]) {
  * @returns interpreted evm transaction
  */
 function interpretEVMTransaction (logs: EventLog[]): InterpretedEVMTransaction {
-  // console.log(logs)
-
   return {}
 }
 

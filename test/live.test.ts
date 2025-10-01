@@ -29,16 +29,19 @@ test('Should get events in block range', async (assert) => {
   )
 })
 
-test('Should fetch group and parse logs', async (assert) => {
+test('Should fetch group and parse logs into txids', async (assert) => {
   // Create provider and contract interfaces
   const provider = new JsonRpcProvider(ETHEREUM_PROVIDER)
   const contract = new Contract(ETHEREUM_RAILGUN_DEPLOYMENT_PROXY, ABILive, provider)
 
   // Get subsquid export
-  const { subsquidExport } = await getExport(provider, await contract.getAddress())
+  const { subsquidExport, syntheticEvents } = await getExport(provider, await contract.getAddress())
 
-  // Fetch events
-  const events = await fetchEvents(provider, contract, fromBlock, toBlock)
+  // Fetch chain events
+  const chainEvents = await fetchEvents(provider, contract, fromBlock, toBlock)
+
+  // Merge chain and synthetic events
+  const events = [...chainEvents, ...syntheticEvents]
 
   // Group events
   const groupedEvents = groupEvents(events)

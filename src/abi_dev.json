@@ -264,12 +264,12 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct Test.TransactionGroupStruct[]",
-        "name": "transactionGoups",
+        "internalType": "struct TransactionStruct[]",
+        "name": "transaction",
         "type": "tuple[]"
       }
     ],
-    "name": "TransactionGroup",
+    "name": "Action",
     "type": "event"
   },
   {
