@@ -1,8 +1,9 @@
 import 'dotenv/config'
 import { test } from 'brittle'
-import { Contract, JsonRpcProvider } from 'ethers'
+import { Contract, EventLog, JsonRpcProvider, Log } from 'ethers'
 
 import ABILive from '../src/abi_live.json'
+import type { InterpretedEvents } from '../src/assembler'
 import { groupEvents, interpretEventSeries } from '../src/assembler'
 import { fetchEvents } from '../src/events'
 
@@ -57,4 +58,58 @@ test('Should fetch group and parse logs into txids', async (assert) => {
   const interpretedEvents = interpretEventSeries(groupedEvents)
 
   assert.alike(interpretedEvents, subsquidExport, 'Should parse actions and RailgunTXIDs identically to subsquid export')
+})
+
+test('Should parse logs into TXIDs for synthetic super transaction', async (assert) => {
+  // Create provider and contract interfaces
+  const provider = new JsonRpcProvider(ETHEREUM_PROVIDER)
+  const contract = new Contract(ETHEREUM_RAILGUN_DEPLOYMENT_PROXY, ABILive, provider)
+
+  // Get subsquid export
+  const { subsquidExport, syntheticEvents } = await getExport(provider, await contract.getAddress())
+
+  // Squash subsquid export into a single synthetic transaction
+  const allActions = Object
+    .values(subsquidExport)
+    .map(Object.values)
+    .flat()
+
+  const syntheticMegaTXExport: InterpretedEvents = {
+    0: {
+      '0xfakeevmtransaction': allActions
+    }
+  }
+
+  // Fetch chain events
+  const chainEvents = await fetchEvents(provider, contract, fromBlock, toBlock)
+
+  // Merge chain and synthetic events, map into single mega evm transactions
+  const events = [...chainEvents, ...syntheticEvents].map((event) => {
+    return new EventLog(
+      new Log(
+        {
+          transactionHash: '0xfakeevmtransaction',
+          blockHash: '0xfakeblockhash',
+          blockNumber: 0,
+          removed: event.removed,
+          address: event.address,
+          data: event.data,
+          topics: event.topics,
+          index: event.blockNumber << 16 + event.transactionIndex << 16 + event.index,
+          transactionIndex: 0
+        },
+        event.provider
+      ),
+      event.interface,
+      event.fragment
+    )
+  })
+
+  // Group events
+  const groupedEvents = groupEvents(events)
+
+  // Interpret events
+  const interpretedEvents = interpretEventSeries(groupedEvents)
+
+  assert.alike(interpretedEvents, syntheticMegaTXExport, 'Should parse actions and RailgunTXIDs identically to subsquid mega tx')
 })
