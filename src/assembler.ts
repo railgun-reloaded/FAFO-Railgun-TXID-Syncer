@@ -163,7 +163,7 @@ function interpretEVMTransaction (logs: EventLog[]): InterpretedEVMTransaction {
       decodedAction.actionEvent.args[0].forEach((railgunTransaction: [bigint, bigint, string], i: number) => {
         // Railgun transaction: [nullifiers, commitments, boundParamsHash]
         const nullifiers: string[] = decodedAction.nullifierEvents[i]!.args[1] // Get from matching nullifier event
-        const commitments: string[] = actionCommitments.splice(0, Number(railgunTransaction[1]) + 1) // Splice out of start of commitments array
+        const commitments: string[] = actionCommitments.splice(0, Number(railgunTransaction[1])) // Splice out of start of commitments array
         const boundParamsHash: string = railgunTransaction[2] // Get from event value
 
         const railgunTXID = txidHash(nullifiers, commitments, boundParamsHash)
