@@ -1,7 +1,7 @@
 import type { EventLog } from 'ethers'
 
+import { commitmentHash } from './commitment-hash'
 import { txidHash } from './txid-hash'
-import { commitmentsHash } from './commitment-hash'
 
 // Type aliases for readabiltiy
 type EVMBlockNumber = string
@@ -146,8 +146,16 @@ function interpretEVMTransaction (logs: EventLog[]): InterpretedEVMTransaction {
     .map((decodedAction) => {
       // Clone to avoid mutations
       const actionCommitments: string[] = [
-        ...(decodedAction.transactEvent?.args[2] || []),
-        ...decodedAction.unshieldEvents.map((event) => commitmentsHash(event.args[0], event.args[1], event.args[2]))
+        ...(decodedAction.transactEvent?.args[2] || []), // Pull commitment hashes out of transact events if present
+        ...decodedAction.unshieldEvents.map((event) => commitmentHash(
+          event.args[0],
+          {
+            type: Number(event.args[1][0]),
+            address: event.args[1][1],
+            subID: event.args[1][2],
+          },
+          event.args[2] + event.args[3])
+        ) // Hash commitments from unshield events if present
       ]
 
       const railgunTXIDs: InterpretedAction = {}
