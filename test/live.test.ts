@@ -73,6 +73,7 @@ test('Should parse logs into TXIDs for synthetic super transaction', async (asse
     .values(subsquidExport)
     .map(Object.values)
     .flat()
+    .flat()
 
   const syntheticMegaTXExport: InterpretedEvents = {
     0: {
