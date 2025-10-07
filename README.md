@@ -1,5 +1,5 @@
 # Railgun TXID Syncer
-FAFO R&D repo to explore syncing TXIDs directly from RPCs without call rtacing support
+FAFO R&D repo to explore syncing TXIDs directly from RPCs without call tracing support
 
 ## Usage
 FAFO scenarios are in `test` folder excluding `test/unit`.
