@@ -129,8 +129,8 @@ function interpretEVMTransaction (logs: EventLog[]): InterpretedEVMTransaction {
       // Set transact event on decoder
       decoders[decoders.length - 1]!.transactEvent = nextEvent
     } else if (nextEvent.eventName === 'Unshield') {
-      // Unshift event to decoder unshields (unshift instead of push since we're processing in reverse order)
-      decoders[decoders.length - 1]!.unshieldEvents.unshift(nextEvent)
+      // Unshift event to decoder unshields
+      decoders[decoders.length - 1]!.unshieldEvents.push(nextEvent)
     } else {
       // We FA too much, now FO
       throw new Error('How did we get here?')
