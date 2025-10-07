@@ -95,7 +95,7 @@ test('Should parse logs into TXIDs for synthetic super transaction', async (asse
           address: event.address,
           data: event.data,
           topics: event.topics,
-          index: event.blockNumber << 16 + event.transactionIndex << 16 + event.index,
+          index: (event.blockNumber << 32) + (event.transactionIndex << 16) + event.index,
           transactionIndex: 0
         },
         event.provider
