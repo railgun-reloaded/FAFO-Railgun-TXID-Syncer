@@ -101,6 +101,7 @@ async function getExport (provider: Provider, contractAddress: string) {
       for (
         const railgunTransaction of subsquidExportTyped[blockNumber]!.evmTransactions[evmTransactionHash]!.railgunTXIDs
       ) {
+        // Hash txid
         const railgunTXID = txidHash(
           railgunTransaction.nullifiers.map((nullifier) => numberStringToHexString(nullifier, 32)),
           railgunTransaction.commitments.map((commitment) => numberStringToHexString(commitment, 32)),
@@ -114,9 +115,11 @@ async function getExport (provider: Provider, contractAddress: string) {
           boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
         }
 
+        // Push to actions array
         action.push({
           nullifiersCount: railgunTransaction.nullifiers.length,
           commitmentsCount: railgunTransaction.commitments.length,
+          hasUnshield: railgunTransaction.hasUnshield,
           boundParamsHash: numberStringToHexString(railgunTransaction.boundParamsHash, 32)
         })
       }

@@ -145,29 +145,48 @@ function interpretEVMTransaction (logs: EventLog[]): InterpretedEVMTransaction {
     .sort((a, b) => b.sequence - a.sequence)
     .map((decodedAction) => {
       // Clone to avoid mutations
-      const actionCommitments: string[] = [
-        ...(decodedAction.transactEvent?.args[2] || []), // Pull commitment hashes out of transact events if present
-        ...decodedAction.unshieldEvents.map((event) => commitmentHash(
-          event.args[0],
-          {
-            type: Number(event.args[1][0]),
-            address: event.args[1][1],
-            subID: event.args[1][2],
-          },
-          event.args[2] + event.args[3])
-        ) // Hash commitments from unshield events if present
-      ]
+
+      // Pull commitment hashes out of transact events if present
+      const transactCommitments: string[] = [...(decodedAction.transactEvent?.args[2] || [])]
+
+      // Hash commitments from unshield events if present
+      const unshieldEvents = decodedAction.unshieldEvents.map((event) => commitmentHash(
+        event.args[0],
+        {
+          type: Number(event.args[1][0]),
+          address: event.args[1][1],
+          subID: event.args[1][2],
+        },
+        event.args[2] + event.args[3])
+      )
 
       const railgunTXIDs: InterpretedAction = {}
 
-      decodedAction.actionEvent.args[0].forEach((railgunTransaction: [bigint, bigint, string], i: number) => {
-        // Railgun transaction: [nullifiers, commitments, boundParamsHash]
-        const nullifiers: string[] = decodedAction.nullifierEvents[i]!.args[1] // Get from matching nullifier event
-        const commitments: string[] = actionCommitments.splice(0, Number(railgunTransaction[1])) // Splice out of start of commitments array
-        const boundParamsHash: string = railgunTransaction[2] // Get from event value
+      decodedAction.actionEvent.args[0].forEach((railgunTransaction: [bigint, bigint, boolean, string], i: number) => {
+        // Railgun transaction: [nullifiers, commitments, hasUnshield, boundParamsHash]
 
+        // Get from matching nullifier event
+        const nullifiers: string[] = [...decodedAction.nullifierEvents[i]!.args[1]]
+
+        // Get from event value
+        const hasUnshield: boolean = railgunTransaction[2]
+
+        // Get from event value
+        const boundParamsHash: string = railgunTransaction[3]
+
+        // Calculate number of commitments in transact event
+        const transactCommitmentCount = hasUnshield ? Number(railgunTransaction[1]) - 1 : Number(railgunTransaction[1])
+
+        // Get commitments
+        const commitments: string[] = [
+          ...transactCommitments.splice(0, transactCommitmentCount), // Splice commitments from transact event
+          ...(hasUnshield ? [unshieldEvents.pop()!] : []) // Get commitment from unshield event if has unshield
+        ]
+
+        // Calculate txid hash
         const railgunTXID = txidHash(nullifiers, commitments, boundParamsHash)
 
+        // Set txid entry
         railgunTXIDs[railgunTXID] = {
           nullifiers,
           commitments,

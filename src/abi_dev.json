@@ -258,14 +258,19 @@
             "type": "uint8"
           },
           {
+            "internalType": "bool",
+            "name": "hasUnshield",
+            "type": "bool"
+          },
+          {
             "internalType": "bytes32",
             "name": "boundParamsHash",
             "type": "bytes32"
           }
         ],
         "indexed": false,
-        "internalType": "struct TransactionStruct[]",
-        "name": "transaction",
+        "internalType": "struct Test.TransactionStruct[]",
+        "name": "transactions",
         "type": "tuple[]"
       }
     ],
